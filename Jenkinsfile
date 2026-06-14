@@ -46,7 +46,7 @@ pipeline{
         stage("Docker Build & Push"){
             steps{
                 script{
-                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
+                   withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker'){   
                        sh "docker build -t starbucks ."
                        sh "docker tag starbucks saitejch/starbucks:latest "
                        sh "docker push saitejch/starbucks:latest "
