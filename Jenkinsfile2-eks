@@ -15,12 +15,12 @@ pipeline{
         }
         stage('Checkout from Git'){
             steps{
-                git branch: 'main', credentialsId: 'github-token', url: 'https://github.com/Aseemakram19/starbucks-kubernetes.git'
+                git branch: 'main', credentialsId: 'github-token', url: 'https://github.com/ChSaitej123/starbucks-kubernetes.git'
             }
         }
         stage("Sonarqube Analysis "){
             steps{
-                withSonarQubeEnv('SonarQube') {
+                withSonarQubeEnv('sonar') {
                     sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=starbucks \
                     -Dsonar.projectKey=starbucks '''
                 }
@@ -29,7 +29,7 @@ pipeline{
         stage("quality gate"){
            steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
                 }
             } 
         }
@@ -48,15 +48,15 @@ pipeline{
                 script{
                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
                        sh "docker build -t starbucks ."
-                       sh "docker tag starbucks aseemakram19/starbucks:latest "
-                       sh "docker push aseemakram19/starbucks:latest "
+                       sh "docker tag starbucks saitejch/starbucks:latest "
+                       sh "docker push saitejch/starbucks:latest "
                     }
                 }
             }
         }
         stage("TRIVY"){
             steps{
-                sh "trivy image aseemakram19/starbucks:latest > trivyimage.txt" 
+                sh "trivy image saitejch/starbucks:latest > trivyimage.txt" 
             }
         }
         stage('Deploy to EKS Cluster') {
@@ -68,7 +68,7 @@ pipeline{
                     aws sts get-caller-identity
 
                     echo "Configuring kubectl for EKS cluster..."
-                    aws eks update-kubeconfig --region ap-south-1 --name Cloudaseem
+                    aws eks update-kubeconfig --region us-east-1 --name ekswithsai
 
                     echo "Verifying kubeconfig..."
                     kubectl config view
@@ -102,10 +102,31 @@ pipeline{
                     <p>Build Status: ${buildStatus}</p>
                     <p>Started by: ${buildUser}</p>
                     <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inline CSS Example</title>
+</head>
+<body style="background-color: lightblue; font-family: Arial, sans-serif;">
+
+    <h1 style="color: darkblue; text-align: center;">
+        Welcome to My Website
+    </h1>
+
+    <p style="color: green; font-size: 18px;">
+        This paragraph is styled using inline CSS.
+    </p>
+
+    <button style="background-color: orange; color: white; border: none; padding: 10px 20px; border-radius: 5px;">
+        Click Me
+    </button>
+
+</body>
+</html>
                 """,
-                to: 'mohdaseemakram19@gmail.com',
-                from: 'mohdaseemakram19@gmail.com',
-                replyTo: 'mohdaseemakram19@gmail.com',
+                to: 'chsai4576@gmail.com',
+                from: 'chsai4576@gmail.com',
+                replyTo: 'chsai4576@gmail.com',
                 mimeType: 'text/html',
                 attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
             )
