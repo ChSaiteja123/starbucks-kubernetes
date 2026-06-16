@@ -4,7 +4,6 @@ pipeline{
         jdk 'jdk-17'
         nodejs 'node-17'
     }
-
     environment {
         SCANNER_HOME=tool 'sonar-scanner'
     }
@@ -16,7 +15,7 @@ pipeline{
         }
         stage('Checkout from Git'){
             steps{
-                git branch: 'main',  url: 'https://github.com/ChSaitej123/starbucks-kubernetes.git'
+                git branch: 'main', credentialsId: 'github-token', url: 'https://github.com/ChSaiteja123/starbucks-kubernetes.git'
             }
         }
         stage("Sonarqube Analysis "){
@@ -47,7 +46,7 @@ pipeline{
         stage("Docker Build & Push"){
             steps{
                 script{
-                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker'){   
+                    withDockerRegistry(credentialsId: 'docker'){   
                        sh "docker build -t starbucks ."
                        sh "docker tag starbucks saitejch/starbucks:latest "
                        sh "docker push saitejch/starbucks:latest "
@@ -60,8 +59,14 @@ pipeline{
                 sh "trivy image saitejch/starbucks:latest > trivyimage.txt" 
             }
         }
+        stage('App Deploy to Docker container'){
+            steps{
+                sh 'docker run -d --name starbucks -p 3000:3000 saitejch/starbucks:latest'
+            }
+        }
         stage('Deploy to EKS Cluster') {
             steps {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]){
                 dir('kubernetes') {
                 script {
                     sh '''
@@ -69,7 +74,7 @@ pipeline{
                     aws sts get-caller-identity
 
                     echo "Configuring kubectl for EKS cluster..."
-                    aws eks update-kubeconfig --region us-east-1 --name ekswithsai
+                    aws eks update-kubeconfig --region us-east-1 --name eks-web
 
                     echo "Verifying kubeconfig..."
                     kubectl config view
@@ -82,13 +87,12 @@ pipeline{
                     kubectl get svc
                     '''
                 }
+                }
             }
          }
     
        }
-
-    }
-    post {
+       post {
     always {
         script {
             def buildStatus = currentBuild.currentResult
@@ -97,33 +101,58 @@ pipeline{
             emailext (
                 subject: "Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """
+                    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Image Example</title>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb');
+            background-size: cover;
+            background-colour: blue;
+            background-position: center;
+            background-repeat: no-repeat;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .content {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="content">
+        
+        
                     <p>This is a Jenkins starbucks CICD pipeline status.</p>
                     <p>Project: ${env.JOB_NAME}</p>
                     <p>Build Number: ${env.BUILD_NUMBER}</p>
                     <p>Build Status: ${buildStatus}</p>
                     <p>Started by: ${buildUser}</p>
                     <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Inline CSS Example</title>
-</head>
-<body style="background-color: lightblue; font-family: Arial, sans-serif;">
-
-    <h1 style="color: darkblue; text-align: center;">
-        Welcome to My Website
-    </h1>
-
-    <p style="color: green; font-size: 18px;">
-        This paragraph is styled using inline CSS.
-    </p>
-
-    <button style="background-color: orange; color: white; border: none; padding: 10px 20px; border-radius: 5px;">
-        Click Me
-    </button>
+    </div>
 
 </body>
 </html>
+                    <p>This is a Jenkins starbucks CICD pipeline status.</p>
+                    <p>Project: ${env.JOB_NAME}</p>
+                    <p>Build Number: ${env.BUILD_NUMBER}</p>
+                    <p>Build Status: ${buildStatus}</p>
+                    <p>Started by: ${buildUser}</p>
+                    <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
                 """,
                 to: 'chsai4576@gmail.com',
                 from: 'chsai4576@gmail.com',
@@ -135,5 +164,8 @@ pipeline{
        }
 
     }
+
+    }
+
 
 }
