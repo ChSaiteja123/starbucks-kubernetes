@@ -3,15 +3,15 @@ variable "instance_name" {
 }
 
 variable "key_name" {
-  default = "starbucks1"                  # Names of key in aws
+  default = "my_key"                  # Names of key in aws
 }
 
 
 variable "access_key" {
-  default = "insert"                # aws access key
+  default = " "                # aws access key
 }
 
 variable "secret_key" {
-  default = "insert"         # aws secret key
+  default = " "         # aws secret key
 }
 
