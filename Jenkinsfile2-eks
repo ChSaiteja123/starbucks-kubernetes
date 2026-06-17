@@ -5,7 +5,7 @@ pipeline{
         nodejs 'node-17'
     }
     environment {
-        SCANNER_HOME=tool 'sonar-scanner'
+        SCANNER_HOME = "${tool 'sonar-scanner'}"
     }
     stages {
         stage('clean workspace'){
@@ -61,7 +61,8 @@ pipeline{
         }
         stage('App Deploy to Docker container'){
             steps{
-                sh 'docker run -d --name starbucks -p 3000:3000 saitejch/starbucks:latest'
+                sh 'docker rm -f starbucks || true'
+                sh 'docker run -d --name starbucks -p 3030:3000 saitejch/starbucks:latest'
             }
         }
         stage('Deploy to EKS Cluster') {
@@ -74,7 +75,7 @@ pipeline{
                     aws sts get-caller-identity
 
                     echo "Configuring kubectl for EKS cluster..."
-                    aws eks update-kubeconfig --region us-east-1 --name eks-web
+                    aws eks update-kubeconfig --region us-east-1 --name demo-eks
 
                     echo "Verifying kubeconfig..."
                     kubectl config view
@@ -115,7 +116,7 @@ post {
             height: 100vh;
             background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb');
             background-size: cover;
-            background-colour: blue;
+            background-color: blue;
             background-position: center;
             background-repeat: no-repeat;
 
@@ -148,12 +149,6 @@ post {
 
 </body>
 </html>
-                    <p>This is a Jenkins starbucks CICD pipeline status.</p>
-                    <p>Project: ${env.JOB_NAME}</p>
-                    <p>Build Number: ${env.BUILD_NUMBER}</p>
-                    <p>Build Status: ${buildStatus}</p>
-                    <p>Started by: ${buildUser}</p>
-                    <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
                 """,
                 to: 'chsai4576@gmail.com',
                 from: 'chsai4576@gmail.com',
@@ -167,6 +162,3 @@ post {
     }
 
     }
-
-
-
