@@ -46,7 +46,7 @@ pipeline{
         stage("Docker Build & Push"){
             steps{
                 script{
-                    withDockerRegistry(credentialsId: 'docker'){   
+                    withDockerRegistry(credentialsId: 'docker-cred'){   
                        sh "docker build -t starbucks ."
                        sh "docker tag starbucks saitejch/starbucks:latest "
                        sh "docker push saitejch/starbucks:latest "
@@ -75,7 +75,7 @@ pipeline{
                     aws sts get-caller-identity
 
                     echo "Configuring kubectl for EKS cluster..."
-                    aws eks update-kubeconfig --region us-east-1 --name demo-eks
+                    aws eks update-kubeconfig --region us-east-1 --name eks-web
 
                     echo "Verifying kubeconfig..."
                     kubectl config view
@@ -138,7 +138,7 @@ post {
 
     <div class="content">
         
-                    <h1> hii! sai build ${buildStatus}</h1>
+        
                     <p>This is a Jenkins starbucks CICD pipeline status.</p>
                     <p>Project: ${env.JOB_NAME}</p>
                     <p>Build Number: ${env.BUILD_NUMBER}</p>
